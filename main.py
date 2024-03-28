@@ -17,6 +17,12 @@ TARGET_EVENT = pygame.USEREVENT
 TARGET_PADDING = 30 
 # RGB color
 BG_COLOR = (0, 25, 40)
+# Lives in game
+LIVES = 3
+# Top bar
+TOP_BAR_HEIGHT = 50
+# Font for the game analytics
+LABEL_FONT = pygame.font.SysFont("comicsans", 24)
 
 # Manipulates the targets in game
 class Target:
@@ -55,9 +61,32 @@ def draw(win, targets):
 # Loops in all targets
     for target in targets:
         target.draw(win)
-# Draws targets onto screen
-    pygame.display.update()    
+   
+# Formats time counter
+def format_time(secs):
+    milli = math.floor(int(secs * 1000 % 1000) / 100)
+    seconds = int(round(secs % 60, 1))
+    minutes = int(secs // 60)
+    # Allows for two digits in counter
+    return f"{minutes:02d}:{seconds:02d}.{milli}"
+# Game analytics
+def draw_top_bar(win, elapsed_time, targets_pressed, misses):
+    pygame.draw.rect(win, "grey", (0,0, WIDTH, TOP_BAR_HEIGHT))
+    # Renders font and time
+    time_label = LABEL_FONT.render(f"Time: {format_time(elapsed_time)}", 1, "black")
+    
+    speed = round(targets_pressed / elapsed_time, 1)
+    speed_label = LABEL_FONT.render(f"Speed: {speed} t/s", 1, "black")
 
+    hits_label = LABEL_FONT.render(f"Hits: {targets_pressed} ", 1, "black")
+    
+    lives_label = LABEL_FONT.render(f"Lives: {LIVES - misses} ", 1, "black")
+
+    # Displays label and position
+    win.blit(time_label,(5,5))
+    win.blit(speed_label,(200,5))
+    win.blit(hits_label,(450,5))
+    win.blit(lives_label,(650,5))
 
 # main function keeps game playing
 def main():
@@ -65,7 +94,7 @@ def main():
     targets = []
     clock = pygame.time.Clock()
 # Click variables
-    target_pressed = 0
+    targets_pressed = 0
     clicks = 0
     misses = 0
     start_time = time.time()
@@ -79,6 +108,7 @@ def main():
         clock.tick(60)
         click = False
         mouse_pos = pygame.mouse.get_pos()
+        elapsed_time = time.time() - start_time
         # looks for "event"(quiting game X) during game in order to quit
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -87,7 +117,7 @@ def main():
         #    creates event with specific parameters and esures targets remain on screen
             if event.type == TARGET_EVENT:
                x =  random.randint(TARGET_PADDING, WIDTH - TARGET_PADDING)
-               y = random.randint(TARGET_PADDING, HEIGHT - TARGET_PADDING)
+               y = random.randint(TARGET_PADDING + TOP_BAR_HEIGHT, HEIGHT - TARGET_PADDING)
                target = Target(x, y)
                #    pushes target obj into list
                targets.append(target) 
@@ -105,9 +135,15 @@ def main():
             # Click collision on targets
             if click and target.collide(*mouse_pos):
                targets.remove(target)
-               target_pressed += 1 
+               targets_pressed += 1 
+# Function ends game if misses greater than lives
+        if misses >= LIVES:
+            pass    
     #    Calls draw function
-        draw(WIN, targets)   
+        draw(WIN, targets) 
+        draw_top_bar(WIN, elapsed_time, targets_pressed, misses )
+            # Draws targets onto screen
+        pygame.display.update() 
     # Quits game
     pygame.quit()    
            
