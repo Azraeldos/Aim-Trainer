@@ -3,9 +3,9 @@ import random
 import time
 import pygame
 pygame.init()
-# Current problem (Make Targets appear)
+
 # Pixels for the screen size
-WIDTH, HEIGHT = 600, 400
+WIDTH, HEIGHT = 800, 600
 # Display window screen
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 # name of the window
@@ -50,7 +50,7 @@ class Target:
         pygame.draw.circle(win,self.COLOR,(self.x,self.y), self.size)
         pygame.draw.circle(win,self.SECOND_COLOR,(self.x,self.y), self.size * 0.8)
         pygame.draw.circle(win,self.COLOR,(self.x,self.y), self.size * 0.6)
-        pygame.draw.circle(win,self.SECOND_COLOR,(self.x,self.y), self.size * .04)
+        pygame.draw.circle(win,self.SECOND_COLOR,(self.x,self.y), self.size * 0.4)
 # Collision for targets
     def collide(self, x, y):
         dis = math.sqrt((x - self.x)**2 + (y - self.y)**2)
@@ -87,6 +87,37 @@ def draw_top_bar(win, elapsed_time, targets_pressed, misses):
     win.blit(speed_label,(200,5))
     win.blit(hits_label,(450,5))
     win.blit(lives_label,(650,5))
+# End screen
+def end_screen(win, elapsed_time, targets_pressed, clicks):
+    win.fill(BG_COLOR)
+    time_label = LABEL_FONT.render(f"Time: {format_time(elapsed_time)}", 1, "white")
+    
+    speed = round(targets_pressed / elapsed_time, 1)
+    speed_label = LABEL_FONT.render(f"Speed: {speed} t/s", 1, "white")
+
+    hits_label = LABEL_FONT.render(f"Hits: {targets_pressed} ", 1, "white")
+    
+    accuracy = round(targets_pressed / clicks * 100, 1)
+    accuracy_label = LABEL_FONT.render(f"Accuracy: {accuracy}%", 1, "white")
+
+# Displays label and position
+    win.blit(time_label,(get_middle(time_label),100))
+    win.blit(speed_label,(get_middle(speed_label),200))
+    win.blit(hits_label,(get_middle(hits_label),300))
+    win.blit(accuracy_label,(get_middle(accuracy_label),400))
+
+    pygame.display.update()
+# Passes users game until they press something
+    run = True
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or  event.type == pygame.KEYDOWN:
+                quit()
+            
+
+def get_middle(surface):
+    return WIDTH / 2 - surface.get_width()/2
+
 
 # main function keeps game playing
 def main():
@@ -138,10 +169,10 @@ def main():
                targets_pressed += 1 
 # Function ends game if misses greater than lives
         if misses >= LIVES:
-            pass    
+            end_screen(WIN, elapsed_time, targets_pressed, clicks)   
     #    Calls draw function
         draw(WIN, targets) 
-        draw_top_bar(WIN, elapsed_time, targets_pressed, misses )
+        draw_top_bar(WIN, elapsed_time, targets_pressed, misses)
             # Draws targets onto screen
         pygame.display.update() 
     # Quits game
